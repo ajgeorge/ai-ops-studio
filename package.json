@@ -1,0 +1,29 @@
+{
+  "name": "ai-ops-studio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Full-stack AI workflow platform for structured requirements, operations decision support, and RAG evaluation.",
+  "type": "module",
+  "packageManager": "npm@10.9.3",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run build -w @ai-ops-studio/shared && concurrently \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "npm run dev -w @ai-ops-studio/api",
+    "dev:web": "npm run dev -w @ai-ops-studio/web",
+    "build": "npm run build -w @ai-ops-studio/shared && npm run build -w @ai-ops-studio/api && npm run build -w @ai-ops-studio/web",
+    "typecheck": "npm run typecheck -w @ai-ops-studio/shared && npm run typecheck -w @ai-ops-studio/api && npm run typecheck -w @ai-ops-studio/web",
+    "test": "npm run build -w @ai-ops-studio/shared && npm run test -w @ai-ops-studio/api",
+    "clean": "node ./scripts/clean.mjs"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  }
+}
