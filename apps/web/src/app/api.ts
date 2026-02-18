@@ -1,4 +1,4 @@
-import type { HealthResponse } from "@ai-ops-studio/shared";
+import type { DashboardSummary, HealthResponse } from "@ai-ops-studio/shared";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 const apiBaseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3000/api";
@@ -9,8 +9,11 @@ export const api = createApi({
   endpoints: (builder) => ({
     getHealth: builder.query<HealthResponse, void>({
       query: () => "/health"
+    }),
+    getDashboardSummary: builder.query<DashboardSummary, void>({
+      query: () => "/dashboard/summary"
     })
   })
 });
 
-export const { useGetHealthQuery } = api;
+export const { useGetDashboardSummaryQuery, useGetHealthQuery } = api;

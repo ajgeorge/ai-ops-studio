@@ -21,6 +21,7 @@ AI Ops Studio is a production-inspired case-study platform for building AI-power
 
 ```bash
 npm install
+npm run db:generate
 npm run build
 npm run test
 npm run dev
@@ -43,6 +44,15 @@ docs/       Architecture, AI workflow, database, deployment, and ADR notes
 ## Environment
 
 Copy `.env.example` to `.env` and keep `AI_PROVIDER=mock` for local demo mode without API keys.
+
+## Database
+
+The Prisma schema targets PostgreSQL. For local development, set `DATABASE_URL`, then run:
+
+```bash
+npm run db:push
+npm run db:seed
+```
 
 ## Status
 

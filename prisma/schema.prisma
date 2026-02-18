@@ -1,0 +1,528 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AppModule {
+  REQUIREMENTS
+  OPERATIONS
+  RAG
+  AI_CONTROL_CENTER
+  AUDIT_LOGS
+  DASHBOARD
+}
+
+enum AIProviderName {
+  MOCK
+  OPENAI
+}
+
+enum AIRunStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+  VALIDATION_FAILED
+}
+
+enum PromptStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum ProjectStatus {
+  DRAFT
+  ANALYZED
+  NEEDS_CLARIFICATION
+  PROPOSAL_READY
+  ARCHIVED
+}
+
+enum QuestionStatus {
+  UNANSWERED
+  ANSWERED
+  SKIPPED
+  NOT_RELEVANT
+}
+
+enum RequirementCategory {
+  USER_MANAGEMENT
+  WORKFLOW
+  REPORTING
+  PAYMENTS
+  INVENTORY
+  NOTIFICATIONS
+  INTEGRATION
+  SECURITY
+  OTHER
+}
+
+enum RequirementPriority {
+  MUST_HAVE
+  SHOULD_HAVE
+  COULD_HAVE
+}
+
+enum ConfidenceLevel {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum GeneratedSource {
+  USER_PROVIDED
+  AI_INFERRED
+}
+
+enum FeatureBucket {
+  MVP
+  FUTURE
+  OUT_OF_SCOPE
+}
+
+enum UserStoryStatus {
+  DRAFT
+  ACCEPTED
+  REJECTED
+}
+
+enum HttpMethod {
+  GET
+  POST
+  PATCH
+  PUT
+  DELETE
+}
+
+enum TechnicianStatus {
+  AVAILABLE
+  BUSY
+  OFFLINE
+  ON_BREAK
+}
+
+enum JobStatus {
+  PENDING
+  ASSIGNED
+  ACCEPTED
+  EN_ROUTE
+  ARRIVED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  DELAYED
+}
+
+enum JobPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum RecommendationStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum RagDocumentStatus {
+  UPLOADED
+  PROCESSING
+  READY
+  FAILED
+}
+
+model PromptVersion {
+  id          String       @id @default(cuid())
+  key         String
+  version     Int
+  module      AppModule
+  title       String
+  template    String
+  status      PromptStatus @default(ACTIVE)
+  notes       String?
+  metadata    Json?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  aiRuns      AIRun[]
+
+  @@unique([key, version])
+  @@index([module, status])
+}
+
+model AIRun {
+  id               String         @id @default(cuid())
+  module           AppModule
+  workflow         String
+  step             String?
+  provider         AIProviderName @default(MOCK)
+  model            String?
+  promptVersionId  String?
+  promptVersion    PromptVersion? @relation(fields: [promptVersionId], references: [id], onDelete: SetNull)
+  status           AIRunStatus    @default(PENDING)
+  input            Json
+  output           Json?
+  validationErrors Json?
+  latencyMs        Int?
+  tokenUsage       Json?
+  startedAt        DateTime       @default(now())
+  completedAt      DateTime?
+  createdAt        DateTime       @default(now())
+
+  @@index([module, createdAt])
+  @@index([status, createdAt])
+}
+
+model AuditLog {
+  id         String    @id @default(cuid())
+  actorId    String    @default("demo-admin")
+  action     String
+  module     AppModule
+  entityType String
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime  @default(now())
+
+  @@index([module, createdAt])
+  @@index([entityType, entityId])
+}
+
+model RequirementProject {
+  id                   String               @id @default(cuid())
+  name                 String
+  industry             String
+  clientType           String?
+  status               ProjectStatus        @default(DRAFT)
+  completionPercentage Int                  @default(0)
+  deadline             DateTime?
+  budgetRange          String?
+  additionalNotes      String?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  brief                ClientBrief?
+  clarifyingQuestions  ClarifyingQuestion[]
+  requirements         Requirement[]
+  features             Feature[]
+  userStories          UserStory[]
+  dataEntities         DataEntity[]
+  apiRouteSuggestions  ApiRouteSuggestion[]
+  proposals            GeneratedProposal[]
+
+  @@index([status, updatedAt])
+}
+
+model ClientBrief {
+  id                  String             @id @default(cuid())
+  projectId           String             @unique
+  project             RequirementProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  businessDescription String
+  currentWorkflow     String?
+  painPoints          String?
+  requiredModules     String[]
+  knownUsers          String[]
+  rawBrief            String
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+}
+
+model ClarifyingQuestion {
+  id         String             @id @default(cuid())
+  projectId  String
+  project    RequirementProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  category   String
+  question   String
+  answer     String?
+  status     QuestionStatus     @default(UNANSWERED)
+  confidence ConfidenceLevel    @default(MEDIUM)
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+
+  @@index([projectId, status])
+}
+
+model Requirement {
+  id          String              @id @default(cuid())
+  projectId   String
+  project     RequirementProject  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  description String
+  category    RequirementCategory
+  priority    RequirementPriority
+  confidence  ConfidenceLevel
+  source      GeneratedSource
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([projectId, priority])
+}
+
+model Feature {
+  id          String             @id @default(cuid())
+  projectId   String
+  project     RequirementProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  bucket      FeatureBucket
+  createdAt   DateTime           @default(now())
+
+  @@index([projectId, bucket])
+}
+
+model UserStory {
+  id                 String              @id @default(cuid())
+  projectId          String
+  project            RequirementProject  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title              String
+  role               String
+  goal               String
+  benefit            String
+  priority           RequirementPriority
+  relatedFeature     String?
+  status             UserStoryStatus     @default(DRAFT)
+  acceptanceCriteria String[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@index([projectId, priority])
+}
+
+model DataEntity {
+  id            String             @id @default(cuid())
+  projectId     String
+  project       RequirementProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name          String
+  fields        Json
+  relationships Json?
+  notes         String?
+  createdAt     DateTime           @default(now())
+
+  @@index([projectId, name])
+}
+
+model ApiRouteSuggestion {
+  id              String             @id @default(cuid())
+  projectId       String
+  project         RequirementProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  method          HttpMethod
+  path            String
+  purpose         String
+  requestBody     Json?
+  responseShape   Json?
+  permission      String?
+  relatedDataModel String?
+  createdAt       DateTime           @default(now())
+
+  @@index([projectId, method])
+}
+
+model GeneratedProposal {
+  id        String             @id @default(cuid())
+  projectId String
+  project   RequirementProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title     String
+  markdown  String
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  name      String
+  phone     String?
+  email     String?
+  vehicles  Vehicle[]
+  jobs      Job[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Vehicle {
+  id         String    @id @default(cuid())
+  customerId String
+  customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  make       String
+  model      String
+  plate      String
+  jobs       Job[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([plate])
+}
+
+model Technician {
+  id                   String            @id @default(cuid())
+  name                 String
+  skills               String[]
+  status               TechnicianStatus  @default(AVAILABLE)
+  currentJobCount      Int               @default(0)
+  completedJobsToday   Int               @default(0)
+  averageCompletionMin Int               @default(45)
+  latitude             Float?
+  longitude            Float?
+  jobs                 Job[]
+  recommendations      AIRecommendation[]
+  pings                LocationPing[]
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+}
+
+model ServiceType {
+  id               String   @id @default(cuid())
+  name             String   @unique
+  requiredSkill    String
+  targetResponseMin Int     @default(30)
+  jobs             Job[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Job {
+  id               String             @id
+  customerId        String
+  customer          Customer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  vehicleId         String
+  vehicle           Vehicle            @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  serviceTypeId     String
+  serviceType       ServiceType        @relation(fields: [serviceTypeId], references: [id])
+  assignedTechnicianId String?
+  assignedTechnician   Technician?     @relation(fields: [assignedTechnicianId], references: [id], onDelete: SetNull)
+  status            JobStatus          @default(PENDING)
+  priority          JobPriority        @default(NORMAL)
+  locationLabel     String
+  latitude          Float
+  longitude         Float
+  slaDeadline       DateTime
+  delayRiskScore    Int                @default(0)
+  events            JobEvent[]
+  recommendations   AIRecommendation[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@index([status, slaDeadline])
+  @@index([assignedTechnicianId])
+}
+
+model JobEvent {
+  id        String    @id @default(cuid())
+  jobId     String
+  job       Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  status    JobStatus
+  note      String?
+  createdAt DateTime  @default(now())
+
+  @@index([jobId, createdAt])
+}
+
+model LocationPing {
+  id           String      @id @default(cuid())
+  technicianId String
+  technician   Technician  @relation(fields: [technicianId], references: [id], onDelete: Cascade)
+  latitude     Float
+  longitude    Float
+  recordedAt   DateTime    @default(now())
+
+  @@index([technicianId, recordedAt])
+}
+
+model AIRecommendation {
+  id                    String               @id @default(cuid())
+  jobId                 String
+  job                   Job                  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  recommendedTechnicianId String
+  recommendedTechnician   Technician         @relation(fields: [recommendedTechnicianId], references: [id])
+  score                 Float
+  confidence            ConfidenceLevel
+  explanation           String
+  status                RecommendationStatus @default(PENDING_APPROVAL)
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  @@index([status, createdAt])
+}
+
+model DailyOpsReport {
+  id        String   @id @default(cuid())
+  reportDate DateTime @unique
+  summary   String
+  metrics   Json
+  createdAt DateTime @default(now())
+}
+
+model RagDocument {
+  id        String            @id @default(cuid())
+  title     String
+  source    String?
+  status    RagDocumentStatus @default(UPLOADED)
+  content   String
+  chunks    RagChunk[]
+  answers   RagAnswer[]
+  testCases RagTestCase[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+model RagChunk {
+  id         String      @id @default(cuid())
+  documentId String
+  document   RagDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  chunkIndex Int
+  heading    String?
+  content    String
+  tokenCount Int
+  metadata   Json?
+  createdAt  DateTime    @default(now())
+
+  @@unique([documentId, chunkIndex])
+}
+
+model RagQuestion {
+  id        String      @id @default(cuid())
+  question  String
+  answers   RagAnswer[]
+  createdAt DateTime    @default(now())
+}
+
+model RagAnswer {
+  id          String          @id @default(cuid())
+  questionId  String
+  question    RagQuestion     @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  documentId  String
+  document    RagDocument     @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  answer      String
+  citations   Json
+  latencyMs   Int?
+  score       Float?
+  createdAt   DateTime        @default(now())
+  evaluations RagEvaluationRun[]
+
+  @@index([documentId, createdAt])
+}
+
+model RagTestCase {
+  id              String      @id @default(cuid())
+  documentId       String
+  document         RagDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  question         String
+  expectedAnswer   String
+  expectedChunkIds String[]
+  createdAt        DateTime    @default(now())
+}
+
+model RagEvaluationRun {
+  id          String    @id @default(cuid())
+  answerId    String
+  answer      RagAnswer @relation(fields: [answerId], references: [id], onDelete: Cascade)
+  faithfulness Float
+  completeness Float
+  citationCoverage Float
+  notes       String?
+  createdAt   DateTime  @default(now())
+}

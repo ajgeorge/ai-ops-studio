@@ -1,6 +1,6 @@
-import { Activity, AlertTriangle, ClipboardCheck, FileSearch } from "lucide-react";
+import { Activity, AlertTriangle, ClipboardCheck, FileSearch, type LucideIcon } from "lucide-react";
 
-import { useGetHealthQuery } from "../../app/api";
+import { useGetDashboardSummaryQuery, useGetHealthQuery } from "../../app/api";
 import { MetricCard } from "../../components/ui/MetricCard";
 import { StatusPill } from "../../components/ui/StatusPill";
 
@@ -31,15 +31,36 @@ const metrics = [
   }
 ];
 
-const workflowRows = [
+type WorkflowDisplayRow = {
+  name: string;
+  status: string;
+  tone: "blue" | "teal" | "amber" | "red" | "green" | "gray";
+  icon: LucideIcon;
+};
+
+const workflowRows: WorkflowDisplayRow[] = [
   { name: "Requirements Engine", status: "Foundation", tone: "blue" as const, icon: ClipboardCheck },
   { name: "Operations Copilot", status: "Planned", tone: "gray" as const, icon: Activity },
   { name: "RAG Evaluation Lab", status: "Planned", tone: "gray" as const, icon: FileSearch },
   { name: "AI Control Center", status: "Planned", tone: "gray" as const, icon: AlertTriangle }
 ];
 
+const workflowIcons = {
+  "Requirements Engine": ClipboardCheck,
+  "Operations Copilot": Activity,
+  "RAG Evaluation Lab": FileSearch,
+  "AI Control Center": AlertTriangle
+};
+
 export function DashboardPage() {
   const { data, isFetching, isError } = useGetHealthQuery();
+  const { data: summary } = useGetDashboardSummaryQuery();
+  const visibleMetrics = summary?.metrics ?? metrics;
+  const visibleWorkflowRows: WorkflowDisplayRow[] =
+    summary?.workflowStatus.map((row) => ({
+      ...row,
+      icon: workflowIcons[row.name as keyof typeof workflowIcons] ?? AlertTriangle
+    })) ?? workflowRows;
 
   return (
     <div className="space-y-6">
@@ -55,7 +76,7 @@ export function DashboardPage() {
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {metrics.map((metric) => (
+        {visibleMetrics.map((metric) => (
           <MetricCard key={metric.label} {...metric} />
         ))}
       </section>
@@ -66,7 +87,7 @@ export function DashboardPage() {
             <h3 className="font-semibold text-ink">Workflow status</h3>
           </div>
           <div className="divide-y divide-slate-100">
-            {workflowRows.map((row) => {
+            {visibleWorkflowRows.map((row) => {
               const Icon = row.icon;
 
               return (
@@ -102,6 +123,44 @@ export function DashboardPage() {
           </dl>
         </div>
       </section>
+
+      {summary ? (
+        <section className="grid gap-4 xl:grid-cols-2">
+          <div className="rounded-md border border-slate-200 bg-white shadow-panel">
+            <div className="border-b border-slate-200 px-4 py-3">
+              <h3 className="font-semibold text-ink">Recent AI runs</h3>
+            </div>
+            <div className="divide-y divide-slate-100">
+              {summary.recentAiRuns.map((run) => (
+                <div key={run.id} className="grid gap-2 px-4 py-3 text-sm md:grid-cols-[1fr_auto]">
+                  <div>
+                    <p className="font-medium text-ink">{run.workflow}</p>
+                    <p className="text-ink-muted">{run.module}</p>
+                  </div>
+                  <StatusPill label={run.status} tone={run.status === "SUCCEEDED" ? "green" : "amber"} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-md border border-slate-200 bg-white shadow-panel">
+            <div className="border-b border-slate-200 px-4 py-3">
+              <h3 className="font-semibold text-ink">Recent audit logs</h3>
+            </div>
+            <div className="divide-y divide-slate-100">
+              {summary.recentAuditLogs.map((log) => (
+                <div key={log.id} className="grid gap-2 px-4 py-3 text-sm md:grid-cols-[1fr_auto]">
+                  <div>
+                    <p className="font-medium text-ink">{log.action}</p>
+                    <p className="text-ink-muted">{log.entityType}</p>
+                  </div>
+                  <StatusPill label={log.module} tone="gray" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

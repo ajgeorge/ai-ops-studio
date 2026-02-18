@@ -13,17 +13,27 @@
     "dev": "npm run build -w @ai-ops-studio/shared && concurrently \"npm:dev:api\" \"npm:dev:web\"",
     "dev:api": "npm run dev -w @ai-ops-studio/api",
     "dev:web": "npm run dev -w @ai-ops-studio/web",
-    "build": "npm run build -w @ai-ops-studio/shared && npm run build -w @ai-ops-studio/api && npm run build -w @ai-ops-studio/web",
-    "typecheck": "npm run typecheck -w @ai-ops-studio/shared && npm run typecheck -w @ai-ops-studio/api && npm run typecheck -w @ai-ops-studio/web",
-    "test": "npm run build -w @ai-ops-studio/shared && npm run test -w @ai-ops-studio/api",
-    "clean": "node ./scripts/clean.mjs"
+    "build": "npm run db:generate && npm run build -w @ai-ops-studio/shared && npm run build -w @ai-ops-studio/api && npm run build -w @ai-ops-studio/web",
+    "typecheck": "npm run db:generate && npm run typecheck -w @ai-ops-studio/shared && npm run typecheck -w @ai-ops-studio/api && npm run typecheck -w @ai-ops-studio/web",
+    "test": "npm run db:generate && npm run build -w @ai-ops-studio/shared && npm run test -w @ai-ops-studio/api",
+    "clean": "node ./scripts/clean.mjs",
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
+    "prisma": "^6.18.0",
+    "tsx": "^4.22.3",
     "typescript": "^5.8.3"
   },
   "engines": {
     "node": ">=22.0.0",
     "npm": ">=10.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.18.0",
+    "dotenv": "^17.4.2"
   }
 }

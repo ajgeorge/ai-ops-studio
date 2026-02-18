@@ -5,6 +5,9 @@ import morgan from "morgan";
 
 import { env } from "./config/env.js";
 import { errorHandler } from "./middleware/error-handler.js";
+import { aiRouter } from "./routes/ai.js";
+import { auditLogsRouter } from "./routes/audit-logs.js";
+import { dashboardRouter } from "./routes/dashboard.js";
 import { healthRouter } from "./routes/health.js";
 
 export function createApp() {
@@ -21,6 +24,9 @@ export function createApp() {
   app.use(morgan(env.NODE_ENV === "test" ? "tiny" : "dev"));
 
   app.use("/api/health", healthRouter);
+  app.use("/api/dashboard", dashboardRouter);
+  app.use("/api/ai", aiRouter);
+  app.use("/api/audit-logs", auditLogsRouter);
 
   app.use((request, response) => {
     response.status(404).json({

@@ -2,7 +2,7 @@ type MetricCardProps = {
   label: string;
   value: string;
   detail: string;
-  tone?: "blue" | "teal" | "amber" | "red" | "green";
+  tone?: "blue" | "teal" | "amber" | "red" | "green" | "gray";
 };
 
 const toneClassNames = {
@@ -10,7 +10,8 @@ const toneClassNames = {
   teal: "bg-teal-50 text-signal-teal",
   amber: "bg-amber-50 text-signal-amber",
   red: "bg-red-50 text-signal-red",
-  green: "bg-green-50 text-signal-green"
+  green: "bg-green-50 text-signal-green",
+  gray: "bg-slate-50 text-slate-700"
 };
 
 export function MetricCard({ label, value, detail, tone = "blue" }: MetricCardProps) {

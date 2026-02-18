@@ -4,6 +4,7 @@ const targets = [
   "apps/api/dist",
   "apps/web/dist",
   "packages/shared/dist",
+  "prisma/generated",
   "coverage"
 ];
 
