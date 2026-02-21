@@ -108,3 +108,57 @@ export const aiDemoRunResponseSchema = z.object({
 export type AiDemoWorkflow = z.infer<typeof aiDemoWorkflowSchema>;
 export type AiDemoRunRequest = z.infer<typeof aiDemoRunRequestSchema>;
 export type AiDemoRunResponse = z.infer<typeof aiDemoRunResponseSchema>;
+
+export const aiRunListItemSchema = z.object({
+  id: z.string(),
+  module: z.string(),
+  workflow: z.string(),
+  step: z.string().nullable(),
+  provider: z.string(),
+  model: z.string().nullable(),
+  status: z.string(),
+  input: z.unknown(),
+  output: z.unknown().nullable(),
+  validationErrors: z.unknown().nullable(),
+  latencyMs: z.number().nullable(),
+  tokenUsage: z.unknown().nullable(),
+  startedAt: z.string().datetime(),
+  completedAt: z.string().datetime().nullable(),
+  createdAt: z.string().datetime(),
+  promptVersion: z
+    .object({
+      key: z.string(),
+      version: z.number(),
+      title: z.string()
+    })
+    .nullable()
+});
+
+export const promptVersionSummarySchema = z.object({
+  id: z.string(),
+  key: z.string(),
+  version: z.number(),
+  module: z.string(),
+  title: z.string(),
+  template: z.string(),
+  status: z.string(),
+  notes: z.string().nullable(),
+  metadata: z.unknown().nullable(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime()
+});
+
+export const auditLogItemSchema = z.object({
+  id: z.string(),
+  actorId: z.string(),
+  action: z.string(),
+  module: z.string(),
+  entityType: z.string(),
+  entityId: z.string().nullable(),
+  metadata: z.unknown().nullable(),
+  createdAt: z.string().datetime()
+});
+
+export type AiRunListItem = z.infer<typeof aiRunListItemSchema>;
+export type PromptVersionSummary = z.infer<typeof promptVersionSummarySchema>;
+export type AuditLogItem = z.infer<typeof auditLogItemSchema>;
