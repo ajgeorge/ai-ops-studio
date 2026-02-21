@@ -78,3 +78,33 @@ export type WorkflowStatus = z.infer<typeof workflowStatusSchema>;
 export type RecentRun = z.infer<typeof recentRunSchema>;
 export type RecentAuditLog = z.infer<typeof recentAuditLogSchema>;
 export type DashboardSummary = z.infer<typeof dashboardSummarySchema>;
+
+export const aiDemoWorkflowSchema = z.enum([
+  "requirements.analyzeBrief",
+  "operations.explainRecommendation",
+  "rag.answerWithContext"
+]);
+
+export const aiDemoRunRequestSchema = z.object({
+  workflow: aiDemoWorkflowSchema,
+  input: z.record(z.unknown()).default({})
+});
+
+export const aiDemoRunResponseSchema = z.object({
+  runId: z.string().nullable(),
+  status: z.enum(["succeeded", "failed", "validation_failed"]),
+  provider: z.enum(["mock", "openai"]),
+  promptVersion: z.object({
+    key: z.string(),
+    version: z.number(),
+    title: z.string(),
+    source: z.enum(["database", "default"])
+  }),
+  output: z.unknown(),
+  latencyMs: z.number(),
+  warning: z.string().optional()
+});
+
+export type AiDemoWorkflow = z.infer<typeof aiDemoWorkflowSchema>;
+export type AiDemoRunRequest = z.infer<typeof aiDemoRunRequestSchema>;
+export type AiDemoRunResponse = z.infer<typeof aiDemoRunResponseSchema>;

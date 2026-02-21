@@ -1,8 +1,21 @@
+import { aiDemoRunRequestSchema, aiDemoRunResponseSchema } from "@ai-ops-studio/shared";
 import { Router } from "express";
 
 import { prisma } from "../db/prisma.js";
+import { runDemoAIWorkflow } from "../modules/ai/ai-workflow.service.js";
 
 export const aiRouter = Router();
+
+aiRouter.post("/demo-runs", async (request, response, next) => {
+  try {
+    const payload = aiDemoRunRequestSchema.parse(request.body);
+    const result = await runDemoAIWorkflow(payload.workflow, payload.input);
+
+    response.status(result.status === "succeeded" ? 201 : 500).json(aiDemoRunResponseSchema.parse(result));
+  } catch (error) {
+    next(error);
+  }
+});
 
 aiRouter.get("/runs", async (_request, response, next) => {
   try {
