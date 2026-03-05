@@ -9,6 +9,7 @@ import { aiRouter } from "./routes/ai.js";
 import { auditLogsRouter } from "./routes/audit-logs.js";
 import { dashboardRouter } from "./routes/dashboard.js";
 import { healthRouter } from "./routes/health.js";
+import { requirementsRouter } from "./routes/requirements.js";
 
 export function createApp() {
   const app = express();
@@ -27,6 +28,7 @@ export function createApp() {
   app.use("/api/dashboard", dashboardRouter);
   app.use("/api/ai", aiRouter);
   app.use("/api/audit-logs", auditLogsRouter);
+  app.use("/api/requirements", requirementsRouter);
 
   app.use((request, response) => {
     response.status(404).json({

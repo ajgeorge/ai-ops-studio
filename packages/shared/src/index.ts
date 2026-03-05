@@ -162,3 +162,86 @@ export const auditLogItemSchema = z.object({
 export type AiRunListItem = z.infer<typeof aiRunListItemSchema>;
 export type PromptVersionSummary = z.infer<typeof promptVersionSummarySchema>;
 export type AuditLogItem = z.infer<typeof auditLogItemSchema>;
+
+export const createRequirementProjectRequestSchema = z.object({
+  name: z.string().min(2),
+  industry: z.string().min(2),
+  clientType: z.string().optional(),
+  businessDescription: z.string().min(10),
+  currentWorkflow: z.string().optional(),
+  painPoints: z.string().optional(),
+  requiredModules: z.array(z.string()).default([]),
+  knownUsers: z.array(z.string()).default([]),
+  rawBrief: z.string().min(20),
+  deadline: z.string().datetime().optional(),
+  budgetRange: z.string().optional(),
+  additionalNotes: z.string().optional()
+});
+
+export const requirementProjectListItemSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  industry: z.string(),
+  status: z.string(),
+  completionPercentage: z.number(),
+  requirementCount: z.number(),
+  unansweredQuestionCount: z.number(),
+  updatedAt: z.string().datetime()
+});
+
+export const requirementRecordSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string(),
+  category: z.string(),
+  priority: z.string(),
+  confidence: z.string(),
+  source: z.string()
+});
+
+export const clarifyingQuestionRecordSchema = z.object({
+  id: z.string(),
+  category: z.string(),
+  question: z.string(),
+  answer: z.string().nullable(),
+  status: z.string(),
+  confidence: z.string()
+});
+
+export const requirementProjectDetailSchema = requirementProjectListItemSchema.extend({
+  clientType: z.string().nullable(),
+  budgetRange: z.string().nullable(),
+  additionalNotes: z.string().nullable(),
+  brief: z
+    .object({
+      businessDescription: z.string(),
+      currentWorkflow: z.string().nullable(),
+      painPoints: z.string().nullable(),
+      requiredModules: z.array(z.string()),
+      knownUsers: z.array(z.string()),
+      rawBrief: z.string()
+    })
+    .nullable(),
+  requirements: z.array(requirementRecordSchema),
+  clarifyingQuestions: z.array(clarifyingQuestionRecordSchema)
+});
+
+export const analyzeRequirementProjectResponseSchema = z.object({
+  project: requirementProjectDetailSchema,
+  aiRun: aiDemoRunResponseSchema,
+  generated: z.object({
+    requirements: z.number(),
+    clarifyingQuestions: z.number()
+  })
+});
+
+export type CreateRequirementProjectRequest = z.infer<
+  typeof createRequirementProjectRequestSchema
+>;
+export type RequirementProjectListItem = z.infer<typeof requirementProjectListItemSchema>;
+export type RequirementRecord = z.infer<typeof requirementRecordSchema>;
+export type ClarifyingQuestionRecord = z.infer<typeof clarifyingQuestionRecordSchema>;
+export type RequirementProjectDetail = z.infer<typeof requirementProjectDetailSchema>;
+export type AnalyzeRequirementProjectResponse = z.infer<
+  typeof analyzeRequirementProjectResponseSchema
+>;

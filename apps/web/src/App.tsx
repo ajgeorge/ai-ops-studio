@@ -5,13 +5,14 @@ import { AIControlCenterPage } from "./features/ai-control-center/AIControlCente
 import { AuditLogsPage } from "./features/audit-logs/AuditLogsPage";
 import { DashboardPage } from "./features/dashboard/DashboardPage";
 import { PlaceholderPage } from "./features/placeholders/PlaceholderPage";
+import { RequirementsEnginePage } from "./features/requirements/RequirementsEnginePage";
 
 export function App() {
   return (
     <AppShell>
       <Routes>
         <Route path="/" element={<DashboardPage />} />
-        <Route path="/requirements" element={<PlaceholderPage title="Requirements Engine" />} />
+        <Route path="/requirements" element={<RequirementsEnginePage />} />
         <Route path="/ops" element={<PlaceholderPage title="Operations Copilot" />} />
         <Route path="/rag" element={<PlaceholderPage title="RAG Evaluation Lab" />} />
         <Route path="/ai-control-center" element={<AIControlCenterPage />} />

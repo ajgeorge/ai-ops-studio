@@ -5,7 +5,11 @@ import type {
   AuditLogItem,
   DashboardSummary,
   HealthResponse,
-  PromptVersionSummary
+  PromptVersionSummary,
+  AnalyzeRequirementProjectResponse,
+  CreateRequirementProjectRequest,
+  RequirementProjectDetail,
+  RequirementProjectListItem
 } from "@ai-ops-studio/shared";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
@@ -14,7 +18,7 @@ const apiBaseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3000/api";
 export const api = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({ baseUrl: apiBaseUrl }),
-  tagTypes: ["AiRuns", "AuditLogs", "DashboardSummary"],
+  tagTypes: ["AiRuns", "AuditLogs", "DashboardSummary", "RequirementProjects"],
   endpoints: (builder) => ({
     getHealth: builder.query<HealthResponse, void>({
       query: () => "/health"
@@ -41,15 +45,54 @@ export const api = createApi({
         body
       }),
       invalidatesTags: ["AiRuns", "AuditLogs", "DashboardSummary"]
+    }),
+    getRequirementProjects: builder.query<RequirementProjectListItem[], void>({
+      query: () => "/requirements/projects",
+      providesTags: ["RequirementProjects"]
+    }),
+    getRequirementProject: builder.query<RequirementProjectDetail, string>({
+      query: (projectId) => `/requirements/projects/${projectId}`,
+      providesTags: (_result, _error, projectId) => [
+        "RequirementProjects",
+        { type: "RequirementProjects", id: projectId }
+      ]
+    }),
+    createRequirementProject: builder.mutation<
+      RequirementProjectDetail,
+      CreateRequirementProjectRequest
+    >({
+      query: (body) => ({
+        url: "/requirements/projects",
+        method: "POST",
+        body
+      }),
+      invalidatesTags: ["RequirementProjects", "AuditLogs", "DashboardSummary"]
+    }),
+    analyzeRequirementProject: builder.mutation<AnalyzeRequirementProjectResponse, string>({
+      query: (projectId) => ({
+        url: `/requirements/projects/${projectId}/analyze`,
+        method: "POST"
+      }),
+      invalidatesTags: (_result, _error, projectId) => [
+        "RequirementProjects",
+        { type: "RequirementProjects", id: projectId },
+        "AiRuns",
+        "AuditLogs",
+        "DashboardSummary"
+      ]
     })
   })
 });
 
 export const {
+  useAnalyzeRequirementProjectMutation,
+  useCreateRequirementProjectMutation,
   useGetAiRunsQuery,
   useGetAuditLogsQuery,
   useGetDashboardSummaryQuery,
   useGetHealthQuery,
+  useGetRequirementProjectQuery,
+  useGetRequirementProjectsQuery,
   useGetPromptVersionsQuery,
   useRunDemoAiWorkflowMutation
 } = api;
