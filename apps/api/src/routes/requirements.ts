@@ -1,6 +1,8 @@
 import {
   analyzeRequirementProjectResponseSchema,
   createRequirementProjectRequestSchema,
+  generateRequirementArtifactsResponseSchema,
+  markdownExportResponseSchema,
   requirementProjectDetailSchema,
   requirementProjectListItemSchema
 } from "@ai-ops-studio/shared";
@@ -9,6 +11,8 @@ import { Router } from "express";
 import {
   analyzeRequirementProject,
   createRequirementProject,
+  exportRequirementProposalMarkdown,
+  generateRequirementArtifacts,
   getRequirementProject,
   listRequirementProjects,
   RequirementProjectNotFoundError
@@ -57,6 +61,42 @@ requirementsRouter.post("/projects/:projectId/analyze", async (request, response
   try {
     const result = await analyzeRequirementProject(request.params.projectId);
     response.status(201).json(analyzeRequirementProjectResponseSchema.parse(result));
+  } catch (error) {
+    if (error instanceof RequirementProjectNotFoundError) {
+      response.status(404).json({
+        error: {
+          message: error.message
+        }
+      });
+      return;
+    }
+
+    next(error);
+  }
+});
+
+requirementsRouter.post("/projects/:projectId/generate-artifacts", async (request, response, next) => {
+  try {
+    const result = await generateRequirementArtifacts(request.params.projectId);
+    response.status(201).json(generateRequirementArtifactsResponseSchema.parse(result));
+  } catch (error) {
+    if (error instanceof RequirementProjectNotFoundError) {
+      response.status(404).json({
+        error: {
+          message: error.message
+        }
+      });
+      return;
+    }
+
+    next(error);
+  }
+});
+
+requirementsRouter.get("/projects/:projectId/export/markdown", async (request, response, next) => {
+  try {
+    const result = await exportRequirementProposalMarkdown(request.params.projectId);
+    response.json(markdownExportResponseSchema.parse(result));
   } catch (error) {
     if (error instanceof RequirementProjectNotFoundError) {
       response.status(404).json({

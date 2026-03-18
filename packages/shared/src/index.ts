@@ -208,6 +208,52 @@ export const clarifyingQuestionRecordSchema = z.object({
   confidence: z.string()
 });
 
+export const requirementFeatureRecordSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  description: z.string().nullable(),
+  bucket: z.string()
+});
+
+export const userStoryRecordSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  role: z.string(),
+  goal: z.string(),
+  benefit: z.string(),
+  priority: z.string(),
+  relatedFeature: z.string().nullable(),
+  status: z.string(),
+  acceptanceCriteria: z.array(z.string())
+});
+
+export const dataEntityRecordSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  fields: z.unknown(),
+  relationships: z.unknown().nullable(),
+  notes: z.string().nullable()
+});
+
+export const apiRouteSuggestionRecordSchema = z.object({
+  id: z.string(),
+  method: z.string(),
+  path: z.string(),
+  purpose: z.string(),
+  requestBody: z.unknown().nullable(),
+  responseShape: z.unknown().nullable(),
+  permission: z.string().nullable(),
+  relatedDataModel: z.string().nullable()
+});
+
+export const generatedProposalRecordSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  markdown: z.string(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime()
+});
+
 export const requirementProjectDetailSchema = requirementProjectListItemSchema.extend({
   clientType: z.string().nullable(),
   budgetRange: z.string().nullable(),
@@ -223,7 +269,12 @@ export const requirementProjectDetailSchema = requirementProjectListItemSchema.e
     })
     .nullable(),
   requirements: z.array(requirementRecordSchema),
-  clarifyingQuestions: z.array(clarifyingQuestionRecordSchema)
+  clarifyingQuestions: z.array(clarifyingQuestionRecordSchema),
+  features: z.array(requirementFeatureRecordSchema),
+  userStories: z.array(userStoryRecordSchema),
+  dataEntities: z.array(dataEntityRecordSchema),
+  apiRouteSuggestions: z.array(apiRouteSuggestionRecordSchema),
+  proposals: z.array(generatedProposalRecordSchema)
 });
 
 export const analyzeRequirementProjectResponseSchema = z.object({
@@ -235,13 +286,39 @@ export const analyzeRequirementProjectResponseSchema = z.object({
   })
 });
 
+export const generateRequirementArtifactsResponseSchema = z.object({
+  project: requirementProjectDetailSchema,
+  generated: z.object({
+    features: z.number(),
+    userStories: z.number(),
+    dataEntities: z.number(),
+    apiRoutes: z.number(),
+    proposals: z.number()
+  })
+});
+
+export const markdownExportResponseSchema = z.object({
+  projectId: z.string(),
+  filename: z.string(),
+  markdown: z.string()
+});
+
 export type CreateRequirementProjectRequest = z.infer<
   typeof createRequirementProjectRequestSchema
 >;
 export type RequirementProjectListItem = z.infer<typeof requirementProjectListItemSchema>;
 export type RequirementRecord = z.infer<typeof requirementRecordSchema>;
 export type ClarifyingQuestionRecord = z.infer<typeof clarifyingQuestionRecordSchema>;
+export type RequirementFeatureRecord = z.infer<typeof requirementFeatureRecordSchema>;
+export type UserStoryRecord = z.infer<typeof userStoryRecordSchema>;
+export type DataEntityRecord = z.infer<typeof dataEntityRecordSchema>;
+export type ApiRouteSuggestionRecord = z.infer<typeof apiRouteSuggestionRecordSchema>;
+export type GeneratedProposalRecord = z.infer<typeof generatedProposalRecordSchema>;
 export type RequirementProjectDetail = z.infer<typeof requirementProjectDetailSchema>;
 export type AnalyzeRequirementProjectResponse = z.infer<
   typeof analyzeRequirementProjectResponseSchema
 >;
+export type GenerateRequirementArtifactsResponse = z.infer<
+  typeof generateRequirementArtifactsResponseSchema
+>;
+export type MarkdownExportResponse = z.infer<typeof markdownExportResponseSchema>;

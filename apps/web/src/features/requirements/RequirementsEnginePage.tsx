@@ -2,14 +2,26 @@ import type {
   CreateRequirementProjectRequest,
   RequirementProjectListItem
 } from "@ai-ops-studio/shared";
-import { ClipboardCheck, HelpCircle, ListChecks, Sparkles } from "lucide-react";
+import {
+  ClipboardCheck,
+  Database,
+  Download,
+  FileText,
+  GitBranch,
+  HelpCircle,
+  ListChecks,
+  Route,
+  Sparkles
+} from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 
 import {
   useAnalyzeRequirementProjectMutation,
   useCreateRequirementProjectMutation,
+  useGenerateRequirementArtifactsMutation,
   useGetRequirementProjectQuery,
-  useGetRequirementProjectsQuery
+  useGetRequirementProjectsQuery,
+  useLazyExportRequirementProposalMarkdownQuery
 } from "../../app/api";
 import { DataTable, type DataTableColumn } from "../../components/ui/DataTable";
 import { EmptyState } from "../../components/ui/EmptyState";
@@ -109,6 +121,9 @@ export function RequirementsEnginePage() {
   });
   const [createProject, createState] = useCreateRequirementProjectMutation();
   const [analyzeProject, analyzeState] = useAnalyzeRequirementProjectMutation();
+  const [generateArtifacts, generateArtifactsState] = useGenerateRequirementArtifactsMutation();
+  const [exportMarkdown, exportMarkdownState] = useLazyExportRequirementProposalMarkdownQuery();
+  const [markdownExport, setMarkdownExport] = useState<string | null>(null);
 
   useEffect(() => {
     if (!selectedProjectId && projects?.[0]) {
@@ -178,6 +193,36 @@ export function RequirementsEnginePage() {
       await analyzeProject(selectedProjectId).unwrap();
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Could not analyze project brief.");
+    }
+  }
+
+  async function handleGenerateArtifacts() {
+    if (!selectedProjectId) {
+      return;
+    }
+
+    setFormError(null);
+    setMarkdownExport(null);
+
+    try {
+      await generateArtifacts(selectedProjectId).unwrap();
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "Could not generate planning artifacts.");
+    }
+  }
+
+  async function handleExportMarkdown() {
+    if (!selectedProjectId) {
+      return;
+    }
+
+    setFormError(null);
+
+    try {
+      const result = await exportMarkdown(selectedProjectId).unwrap();
+      setMarkdownExport(result.markdown);
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "Could not export proposal markdown.");
     }
   }
 
@@ -352,15 +397,35 @@ export function RequirementsEnginePage() {
                 </div>
 
                 <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={handleAnalyzeProject}
-                    disabled={analyzeState.isLoading}
-                    className="inline-flex items-center gap-2 rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    <Sparkles className="h-4 w-4" aria-hidden="true" />
-                    {analyzeState.isLoading ? "Analyzing" : "Analyze brief"}
-                  </button>
+                  <div className="flex flex-wrap justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={handleAnalyzeProject}
+                      disabled={analyzeState.isLoading}
+                      className="inline-flex items-center gap-2 rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <Sparkles className="h-4 w-4" aria-hidden="true" />
+                      {analyzeState.isLoading ? "Analyzing" : "Analyze brief"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleGenerateArtifacts}
+                      disabled={generateArtifactsState.isLoading}
+                      className="inline-flex items-center gap-2 rounded-md bg-signal-teal px-4 py-2 text-sm font-semibold text-white transition hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <GitBranch className="h-4 w-4" aria-hidden="true" />
+                      {generateArtifactsState.isLoading ? "Generating" : "Generate artifacts"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleExportMarkdown}
+                      disabled={exportMarkdownState.isFetching}
+                      className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <Download className="h-4 w-4" aria-hidden="true" />
+                      {exportMarkdownState.isFetching ? "Exporting" : "Export markdown"}
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -371,6 +436,114 @@ export function RequirementsEnginePage() {
           </section>
         </div>
       </section>
+
+      {selectedProject ? (
+        <section className="grid gap-4 xl:grid-cols-2">
+          <div className="rounded-md border border-slate-200 bg-white p-4 shadow-panel">
+            <div className="flex items-center gap-2">
+              <GitBranch className="h-4 w-4 text-slate-500" aria-hidden="true" />
+              <h3 className="font-semibold text-ink">Scope</h3>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              {["MVP", "FUTURE", "OUT_OF_SCOPE"].map((bucket) => (
+                <div key={bucket} className="rounded-md border border-slate-200 p-3">
+                  <StatusPill label={bucket} tone={bucket === "MVP" ? "green" : "gray"} />
+                  <div className="mt-3 space-y-2">
+                    {selectedProject.features
+                      .filter((feature) => feature.bucket === bucket)
+                      .slice(0, 5)
+                      .map((feature) => (
+                        <div key={feature.id} className="text-sm">
+                          <p className="font-medium text-ink">{feature.title}</p>
+                          <p className="mt-1 text-ink-muted">{feature.description}</p>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-md border border-slate-200 bg-white p-4 shadow-panel">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-slate-500" aria-hidden="true" />
+              <h3 className="font-semibold text-ink">User stories</h3>
+            </div>
+            <div className="mt-4 space-y-3">
+              {selectedProject.userStories.slice(0, 4).map((story) => (
+                <div key={story.id} className="rounded-md border border-slate-200 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-medium text-ink">{story.title}</p>
+                    <StatusPill label={story.priority} tone={story.priority === "MUST_HAVE" ? "green" : "blue"} />
+                  </div>
+                  <p className="mt-2 text-sm text-ink-muted">
+                    As a {story.role}, I want to {story.goal} so that {story.benefit}.
+                  </p>
+                </div>
+              ))}
+              {selectedProject.userStories.length === 0 ? (
+                <EmptyState icon={FileText} title="No user stories generated" />
+              ) : null}
+            </div>
+          </div>
+
+          <div className="rounded-md border border-slate-200 bg-white p-4 shadow-panel">
+            <div className="flex items-center gap-2">
+              <Database className="h-4 w-4 text-slate-500" aria-hidden="true" />
+              <h3 className="font-semibold text-ink">Data model suggestions</h3>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              {selectedProject.dataEntities.slice(0, 6).map((entity) => (
+                <div key={entity.id} className="rounded-md border border-slate-200 p-3">
+                  <p className="font-medium text-ink">{entity.name}</p>
+                  <pre className="mt-2 max-h-32 overflow-auto rounded-md bg-slate-950 p-2 text-xs text-slate-50">
+                    {JSON.stringify(entity.fields, null, 2)}
+                  </pre>
+                </div>
+              ))}
+              {selectedProject.dataEntities.length === 0 ? (
+                <EmptyState icon={Database} title="No data entities generated" />
+              ) : null}
+            </div>
+          </div>
+
+          <div className="rounded-md border border-slate-200 bg-white p-4 shadow-panel">
+            <div className="flex items-center gap-2">
+              <Route className="h-4 w-4 text-slate-500" aria-hidden="true" />
+              <h3 className="font-semibold text-ink">API route suggestions</h3>
+            </div>
+            <div className="mt-4 space-y-2">
+              {selectedProject.apiRouteSuggestions.slice(0, 6).map((route) => (
+                <div
+                  key={route.id}
+                  className="grid gap-2 rounded-md border border-slate-200 p-3 text-sm md:grid-cols-[auto_1fr]"
+                >
+                  <StatusPill label={route.method} tone="blue" />
+                  <div>
+                    <code className="font-semibold text-ink">{route.path}</code>
+                    <p className="mt-1 text-ink-muted">{route.purpose}</p>
+                  </div>
+                </div>
+              ))}
+              {selectedProject.apiRouteSuggestions.length === 0 ? (
+                <EmptyState icon={Route} title="No API routes generated" />
+              ) : null}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {markdownExport ? (
+        <section className="rounded-md border border-slate-200 bg-white p-4 shadow-panel">
+          <div className="flex items-center gap-2">
+            <FileText className="h-4 w-4 text-slate-500" aria-hidden="true" />
+            <h3 className="font-semibold text-ink">Proposal markdown export</h3>
+          </div>
+          <pre className="mt-4 max-h-96 overflow-auto rounded-md bg-slate-950 p-3 text-xs text-slate-50">
+            {markdownExport}
+          </pre>
+        </section>
+      ) : null}
     </div>
   );
 }

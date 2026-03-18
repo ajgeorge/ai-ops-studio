@@ -8,6 +8,8 @@ import type {
   PromptVersionSummary,
   AnalyzeRequirementProjectResponse,
   CreateRequirementProjectRequest,
+  GenerateRequirementArtifactsResponse,
+  MarkdownExportResponse,
   RequirementProjectDetail,
   RequirementProjectListItem
 } from "@ai-ops-studio/shared";
@@ -80,6 +82,21 @@ export const api = createApi({
         "AuditLogs",
         "DashboardSummary"
       ]
+    }),
+    generateRequirementArtifacts: builder.mutation<GenerateRequirementArtifactsResponse, string>({
+      query: (projectId) => ({
+        url: `/requirements/projects/${projectId}/generate-artifacts`,
+        method: "POST"
+      }),
+      invalidatesTags: (_result, _error, projectId) => [
+        "RequirementProjects",
+        { type: "RequirementProjects", id: projectId },
+        "AuditLogs",
+        "DashboardSummary"
+      ]
+    }),
+    exportRequirementProposalMarkdown: builder.query<MarkdownExportResponse, string>({
+      query: (projectId) => `/requirements/projects/${projectId}/export/markdown`
     })
   })
 });
@@ -87,6 +104,9 @@ export const api = createApi({
 export const {
   useAnalyzeRequirementProjectMutation,
   useCreateRequirementProjectMutation,
+  useExportRequirementProposalMarkdownQuery,
+  useLazyExportRequirementProposalMarkdownQuery,
+  useGenerateRequirementArtifactsMutation,
   useGetAiRunsQuery,
   useGetAuditLogsQuery,
   useGetDashboardSummaryQuery,
