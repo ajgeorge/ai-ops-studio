@@ -9,6 +9,7 @@ import { aiRouter } from "./routes/ai.js";
 import { auditLogsRouter } from "./routes/audit-logs.js";
 import { dashboardRouter } from "./routes/dashboard.js";
 import { healthRouter } from "./routes/health.js";
+import { operationsRouter } from "./routes/operations.js";
 import { requirementsRouter } from "./routes/requirements.js";
 
 export function createApp() {
@@ -29,6 +30,7 @@ export function createApp() {
   app.use("/api/ai", aiRouter);
   app.use("/api/audit-logs", auditLogsRouter);
   app.use("/api/requirements", requirementsRouter);
+  app.use("/api/ops", operationsRouter);
 
   app.use((request, response) => {
     response.status(404).json({

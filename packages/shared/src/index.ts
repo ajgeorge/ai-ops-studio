@@ -322,3 +322,79 @@ export type GenerateRequirementArtifactsResponse = z.infer<
   typeof generateRequirementArtifactsResponseSchema
 >;
 export type MarkdownExportResponse = z.infer<typeof markdownExportResponseSchema>;
+
+export const opsSummarySchema = z.object({
+  activeJobs: z.number(),
+  delayedJobs: z.number(),
+  availableTechnicians: z.number(),
+  pendingRecommendations: z.number(),
+  jobsCompletedToday: z.number(),
+  averageResponseTimeMin: z.number(),
+  slaBreaches: z.number()
+});
+
+export const technicianSummarySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  skills: z.array(z.string()),
+  status: z.string(),
+  currentJobCount: z.number(),
+  completedJobsToday: z.number(),
+  averageCompletionMin: z.number(),
+  latitude: z.number().nullable(),
+  longitude: z.number().nullable()
+});
+
+export const opsJobSummarySchema = z.object({
+  id: z.string(),
+  customerName: z.string(),
+  vehicle: z.string(),
+  serviceType: z.string(),
+  requiredSkill: z.string(),
+  locationLabel: z.string(),
+  status: z.string(),
+  priority: z.string(),
+  assignedTechnicianName: z.string().nullable(),
+  slaDeadline: z.string().datetime(),
+  delayRiskScore: z.number(),
+  createdAt: z.string().datetime()
+});
+
+export const technicianScoreBreakdownSchema = z.object({
+  technicianId: z.string(),
+  technicianName: z.string(),
+  score: z.number(),
+  skillMatch: z.number(),
+  availability: z.number(),
+  distanceScore: z.number(),
+  workloadScore: z.number(),
+  slaUrgency: z.number(),
+  distanceKm: z.number().nullable()
+});
+
+export const opsRecommendationSchema = z.object({
+  id: z.string(),
+  jobId: z.string(),
+  recommendedTechnicianId: z.string(),
+  recommendedTechnicianName: z.string(),
+  score: z.number(),
+  confidence: z.string(),
+  explanation: z.string(),
+  status: z.string(),
+  breakdown: z.array(technicianScoreBreakdownSchema),
+  createdAt: z.string().datetime()
+});
+
+export const opsDashboardResponseSchema = z.object({
+  summary: opsSummarySchema,
+  jobs: z.array(opsJobSummarySchema),
+  technicians: z.array(technicianSummarySchema),
+  pendingRecommendations: z.array(opsRecommendationSchema)
+});
+
+export type OpsSummary = z.infer<typeof opsSummarySchema>;
+export type TechnicianSummary = z.infer<typeof technicianSummarySchema>;
+export type OpsJobSummary = z.infer<typeof opsJobSummarySchema>;
+export type TechnicianScoreBreakdown = z.infer<typeof technicianScoreBreakdownSchema>;
+export type OpsRecommendation = z.infer<typeof opsRecommendationSchema>;
+export type OpsDashboardResponse = z.infer<typeof opsDashboardResponseSchema>;

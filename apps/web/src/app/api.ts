@@ -10,6 +10,8 @@ import type {
   CreateRequirementProjectRequest,
   GenerateRequirementArtifactsResponse,
   MarkdownExportResponse,
+  OpsDashboardResponse,
+  OpsRecommendation,
   RequirementProjectDetail,
   RequirementProjectListItem
 } from "@ai-ops-studio/shared";
@@ -20,7 +22,7 @@ const apiBaseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:3000/api";
 export const api = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({ baseUrl: apiBaseUrl }),
-  tagTypes: ["AiRuns", "AuditLogs", "DashboardSummary", "RequirementProjects"],
+  tagTypes: ["AiRuns", "AuditLogs", "DashboardSummary", "RequirementProjects", "OpsDashboard"],
   endpoints: (builder) => ({
     getHealth: builder.query<HealthResponse, void>({
       query: () => "/health"
@@ -97,12 +99,38 @@ export const api = createApi({
     }),
     exportRequirementProposalMarkdown: builder.query<MarkdownExportResponse, string>({
       query: (projectId) => `/requirements/projects/${projectId}/export/markdown`
+    }),
+    getOpsDashboard: builder.query<OpsDashboardResponse, void>({
+      query: () => "/ops/dashboard",
+      providesTags: ["OpsDashboard"]
+    }),
+    recommendTechnician: builder.mutation<OpsRecommendation, string>({
+      query: (jobId) => ({
+        url: `/ops/jobs/${jobId}/recommend`,
+        method: "POST"
+      }),
+      invalidatesTags: ["OpsDashboard", "AiRuns", "AuditLogs", "DashboardSummary"]
+    }),
+    approveRecommendation: builder.mutation<OpsRecommendation, string>({
+      query: (recommendationId) => ({
+        url: `/ops/recommendations/${recommendationId}/approve`,
+        method: "POST"
+      }),
+      invalidatesTags: ["OpsDashboard", "AuditLogs", "DashboardSummary"]
+    }),
+    rejectRecommendation: builder.mutation<OpsRecommendation, string>({
+      query: (recommendationId) => ({
+        url: `/ops/recommendations/${recommendationId}/reject`,
+        method: "POST"
+      }),
+      invalidatesTags: ["OpsDashboard", "AuditLogs", "DashboardSummary"]
     })
   })
 });
 
 export const {
   useAnalyzeRequirementProjectMutation,
+  useApproveRecommendationMutation,
   useCreateRequirementProjectMutation,
   useExportRequirementProposalMarkdownQuery,
   useLazyExportRequirementProposalMarkdownQuery,
@@ -111,8 +139,11 @@ export const {
   useGetAuditLogsQuery,
   useGetDashboardSummaryQuery,
   useGetHealthQuery,
+  useGetOpsDashboardQuery,
   useGetRequirementProjectQuery,
   useGetRequirementProjectsQuery,
   useGetPromptVersionsQuery,
+  useRecommendTechnicianMutation,
+  useRejectRecommendationMutation,
   useRunDemoAiWorkflowMutation
 } = api;
