@@ -398,3 +398,82 @@ export type OpsJobSummary = z.infer<typeof opsJobSummarySchema>;
 export type TechnicianScoreBreakdown = z.infer<typeof technicianScoreBreakdownSchema>;
 export type OpsRecommendation = z.infer<typeof opsRecommendationSchema>;
 export type OpsDashboardResponse = z.infer<typeof opsDashboardResponseSchema>;
+
+export const createRagDocumentRequestSchema = z.object({
+  title: z.string().min(2),
+  source: z.string().optional(),
+  content: z.string().min(20)
+});
+
+export const ragDocumentSummarySchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  source: z.string().nullable(),
+  status: z.string(),
+  chunkCount: z.number(),
+  answerCount: z.number(),
+  updatedAt: z.string().datetime()
+});
+
+export const ragChunkRecordSchema = z.object({
+  id: z.string(),
+  documentId: z.string(),
+  chunkIndex: z.number(),
+  heading: z.string().nullable(),
+  content: z.string(),
+  tokenCount: z.number(),
+  createdAt: z.string().datetime()
+});
+
+export const retrievedChunkRecordSchema = ragChunkRecordSchema.extend({
+  score: z.number()
+});
+
+export const ragEvaluationRecordSchema = z.object({
+  id: z.string(),
+  faithfulness: z.number(),
+  completeness: z.number(),
+  citationCoverage: z.number(),
+  notes: z.string().nullable(),
+  createdAt: z.string().datetime()
+});
+
+export const ragAnswerRecordSchema = z.object({
+  id: z.string(),
+  documentId: z.string(),
+  questionId: z.string(),
+  question: z.string(),
+  answer: z.string(),
+  citations: z.unknown(),
+  latencyMs: z.number().nullable(),
+  score: z.number().nullable(),
+  createdAt: z.string().datetime(),
+  evaluations: z.array(ragEvaluationRecordSchema)
+});
+
+export const ragDocumentDetailSchema = ragDocumentSummarySchema.extend({
+  content: z.string(),
+  chunks: z.array(ragChunkRecordSchema),
+  answers: z.array(ragAnswerRecordSchema)
+});
+
+export const askRagQuestionRequestSchema = z.object({
+  documentId: z.string().min(1),
+  question: z.string().min(5)
+});
+
+export const askRagQuestionResponseSchema = z.object({
+  answer: ragAnswerRecordSchema,
+  retrievedChunks: z.array(retrievedChunkRecordSchema),
+  aiRun: aiDemoRunResponseSchema
+});
+
+export type CreateRagDocumentRequest = z.infer<typeof createRagDocumentRequestSchema>;
+export type RagDocumentSummary = z.infer<typeof ragDocumentSummarySchema>;
+export type RagChunkRecord = z.infer<typeof ragChunkRecordSchema>;
+export type RetrievedChunkRecord = z.infer<typeof retrievedChunkRecordSchema>;
+export type RagEvaluationRecord = z.infer<typeof ragEvaluationRecordSchema>;
+export type RagAnswerRecord = z.infer<typeof ragAnswerRecordSchema>;
+export type RagDocumentDetail = z.infer<typeof ragDocumentDetailSchema>;
+export type AskRagQuestionRequest = z.infer<typeof askRagQuestionRequestSchema>;
+export type AskRagQuestionResponse = z.infer<typeof askRagQuestionResponseSchema>;

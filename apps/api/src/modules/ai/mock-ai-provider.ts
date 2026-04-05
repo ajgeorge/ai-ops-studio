@@ -53,22 +53,34 @@ const mockPayloads: Record<string, MockPayloadFactory> = {
     ],
     approvalRequired: true
   }),
-  "rag.answerWithContext": (input) => ({
-    answer:
-      "Urgent roadside jobs should be escalated after 45 minutes if they still have no technician assignment.",
-    citations: [
-      {
-        chunkId: String(input.chunkId ?? "sample-policy-chunk-1"),
-        heading: "Escalation policy",
-        quote: "Urgent jobs should be escalated after 45 minutes without assignment."
+  "rag.answerWithContext": (input) => {
+    const contextChunks = Array.isArray(input.contextChunks) ? input.contextChunks : [];
+    const firstChunk = contextChunks[0] as
+      | { id?: unknown; heading?: unknown; content?: unknown }
+      | undefined;
+    const heading = String(firstChunk?.heading ?? "Retrieved context");
+    const content = String(
+      firstChunk?.content ??
+        "Urgent jobs should be escalated after 45 minutes without assignment."
+    );
+    const quote = content.length > 180 ? `${content.slice(0, 177)}...` : content;
+
+    return {
+      answer: `Based on ${heading}, ${content}`,
+      citations: [
+        {
+          chunkId: String(firstChunk?.id ?? input.chunkId ?? "sample-policy-chunk-1"),
+          heading,
+          quote
+        }
+      ],
+      evaluation: {
+        faithfulness: contextChunks.length > 0 ? 0.95 : 0.65,
+        completeness: contextChunks.length > 1 ? 0.9 : 0.78,
+        citationCoverage: contextChunks.length > 0 ? 1 : 0
       }
-    ],
-    evaluation: {
-      faithfulness: 0.95,
-      completeness: 0.88,
-      citationCoverage: 1
-    }
-  })
+    };
+  }
 };
 
 export class MockAIProvider implements AIProvider {

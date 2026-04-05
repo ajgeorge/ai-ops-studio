@@ -51,7 +51,13 @@ describe("MockAIProvider", () => {
       prompt: "Answer with context",
       promptKey: "rag.answerWithContext",
       input: {
-        chunkId: "chunk_1"
+        contextChunks: [
+          {
+            id: "chunk_1",
+            heading: "Escalation policy",
+            content: "Urgent jobs should be escalated after 45 minutes without assignment."
+          }
+        ]
       },
       schema: ragAnswerSchema
     });

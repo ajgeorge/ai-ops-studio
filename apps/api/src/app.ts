@@ -10,6 +10,7 @@ import { auditLogsRouter } from "./routes/audit-logs.js";
 import { dashboardRouter } from "./routes/dashboard.js";
 import { healthRouter } from "./routes/health.js";
 import { operationsRouter } from "./routes/operations.js";
+import { ragRouter } from "./routes/rag.js";
 import { requirementsRouter } from "./routes/requirements.js";
 
 export function createApp() {
@@ -31,6 +32,7 @@ export function createApp() {
   app.use("/api/audit-logs", auditLogsRouter);
   app.use("/api/requirements", requirementsRouter);
   app.use("/api/ops", operationsRouter);
+  app.use("/api/rag", ragRouter);
 
   app.use((request, response) => {
     response.status(404).json({
