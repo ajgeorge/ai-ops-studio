@@ -31,3 +31,6 @@ uploads/
 storage/
 *.sqlite
 *.db
+
+# docker volumes / local exports
+.docker-data/

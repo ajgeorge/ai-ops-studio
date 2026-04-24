@@ -24,3 +24,16 @@ The API uses an `AIProvider` interface with two operations:
 `POST /api/ai/demo-runs` exercises the provider, active prompt lookup, structured validation, and AI run lifecycle logging. If the database is unavailable, the endpoint falls back to built-in prompt defaults and still returns mock output; when the database is available, run records are persisted in `AIRun`.
 
 The OpenAI-compatible provider is intentionally stubbed until the real-provider integration slice. This keeps the current app cloneable without API keys.
+
+## Implemented Workflow Controls
+
+- Requirements analysis persists generated requirements, questions, risks, and follow-on artifacts.
+- Operations recommendations combine deterministic scoring with AI-written rationale.
+- Technician assignment recommendations require approval or rejection before they become final.
+- RAG answers persist retrieved chunks, citations, quality scores, and user feedback placeholders.
+- AI run history records provider, prompt version, validation state, latency, payloads, and errors.
+- Audit logs record workflow events that matter for review and traceability.
+
+## Real Provider Readiness
+
+To enable a real provider later, the API should replace the current OpenAI-compatible stub with a production implementation behind the existing `AIProvider` interface. The calling services should continue to validate structured responses with Zod before persisting output.
